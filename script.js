@@ -38,8 +38,11 @@ const addNewTask = function () {
             checkboxed: false,
         }
 
+
         toDoArray.push(toDoObject);
         id++;
+
+        document.getElementById("input").focus(); //пиздец кайф
     }
 };
 
