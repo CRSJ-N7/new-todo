@@ -29,7 +29,7 @@ const addNewTask = function () {
         checkbox.addEventListener('click', checkboxValue)
         innerInput.value = '';
         // toDoArray.push(newTask.id);
-        console.log(toDoArray);
+        // console.log(toDoArray);
 
         let toDoObject = {
             id: id,
@@ -45,22 +45,17 @@ const addNewTask = function () {
 
 const removeAllCheckboxedTasks = function () {
 
-    let tasks = toDoArray.filter(item => item.checkboxed == true)
+    let filtered = toDoArray.filter(item => item.checkboxed == true)
 
-    for (let ids of tasks) {
-        console.log(ids.id)
-    }
-    // tasks.forEach(function() {
-
-    // })
-    // let elements = document.querySelectorAll(`div id=${tasks.id} `)
-    // console.log(elements);
-    console.log(tasks);
+    for (let ids of filtered) {
+        let neededId = ids.id
+        let element = document.getElementById(neededId)
+        element.parentNode.removeChild(element);
+        toDoArray = toDoArray.filter(del => del.id !== neededId)
 
     }
+}
 
-  
-    
 
 const removeTask = function (e) {
     let target = e.target.id;
@@ -79,33 +74,35 @@ const checkboxValue = function (e) {
     toDoObject = toDoArray.findIndex(obj => obj.id == target);
     if (toDoArray[toDoObject].checkboxed == false) {
         toDoArray[toDoObject].checkboxed = true
-        } else {
-            toDoArray[toDoObject].checkboxed = false
-        }
+    } else {
+        toDoArray[toDoObject].checkboxed = false
+    }
     // console.log(toDoArray);
-    
+
 };
 
 const allCheckboxesChecked = function () {
 
     let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
+    toDoArray.map(a => a.checkboxed = true);
+
     checkboxes.forEach((element) => {
         if (element.checked === false) {
             element.checked = true
         }
     })
-
-    
-    
+    // console.log(toDoArray);
 };
 
 const allCheckboxesUnchecked = function () {
     let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
+    toDoArray.map(a => a.checkboxed = false);
     checkboxes.forEach((element) => {
         if (element.checked === true) {
             element.checked = false
         }
     })
+    // console.log(toDoArray);
 };
 
 
