@@ -3,7 +3,7 @@ let mainButton = document.getElementById('button');
 let checkAllButton = document.getElementById('button-check');
 let uncheckAllButton = document.getElementById('button-uncheck');
 let deleteAllButton = document.getElementById('button-delete');
-let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
+// let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
 let toDoArray = [];
 let id = 0;
 
@@ -26,16 +26,16 @@ const addNewTask = function () {
         newTask.append(checkbox);
         newTask.append(deleteButton);
         deleteButton.addEventListener('click', removeTask);
+        checkbox.addEventListener('click', checkboxValue)
         innerInput.value = '';
         // toDoArray.push(newTask.id);
         console.log(toDoArray);
-
-
 
         let toDoObject = {
             id: id,
             checkboxId: id,
             deleteButtoinId: id,
+            checkboxed: false,
         }
 
         toDoArray.push(toDoObject);
@@ -43,15 +43,48 @@ const addNewTask = function () {
     }
 };
 
+const removeAllCheckboxedTasks = function () {
+
+    let tasks = toDoArray.filter(item => item.checkboxed == true)
+
+    for (let ids of tasks) {
+        console.log(ids.id)
+    }
+    // tasks.forEach(function() {
+
+    // })
+    // let elements = document.querySelectorAll(`div id=${tasks.id} `)
+    // console.log(elements);
+    console.log(tasks);
+
+    }
+
+  
+    
+
 const removeTask = function (e) {
     let target = e.target.id;
 
     let task = toDoArray.find(item => item.id == target);
     let element = document.getElementById(task.id);
     element.parentNode.removeChild(element);
+    toDoArray = toDoArray.filter(del => del.id !== task.id);
 
 };
 
+const checkboxValue = function (e) {
+    let target = e.target.id
+    // console.log(target);
+
+    toDoObject = toDoArray.findIndex(obj => obj.id == target);
+    if (toDoArray[toDoObject].checkboxed == false) {
+        toDoArray[toDoObject].checkboxed = true
+        } else {
+            toDoArray[toDoObject].checkboxed = false
+        }
+    // console.log(toDoArray);
+    
+};
 
 const allCheckboxesChecked = function () {
 
@@ -61,6 +94,9 @@ const allCheckboxesChecked = function () {
             element.checked = true
         }
     })
+
+    
+    
 };
 
 const allCheckboxesUnchecked = function () {
@@ -72,10 +108,11 @@ const allCheckboxesUnchecked = function () {
     })
 };
 
+
 mainButton.addEventListener('click', addNewTask);
 checkAllButton.addEventListener('click', allCheckboxesChecked);
 uncheckAllButton.addEventListener('click', allCheckboxesUnchecked);
-// deleteAllButton.addEventListener('click', );
+deleteAllButton.addEventListener('click', removeAllCheckboxedTasks);
 innerInput.addEventListener('keypress', function (event) {
     if (event.key === 'Enter') {
         document.getElementById("button").click();
