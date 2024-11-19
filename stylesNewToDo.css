@@ -1,0 +1,36 @@
+.main-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: auto;
+    height: auto;
+    border: 0.1px solid red;
+   
+}
+
+.main-input {
+    border: 1px solid black;
+    width: 300px;
+    height: 30px;
+}
+
+.task {
+    border: 0.3px solid red;
+    padding: 1px;
+    margin: 1px;
+    width: 300px;
+    height: 30px;
+}
+
+.add-task {
+    display: flex;
+    flex-direction: row;
+}
+
+.change-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
