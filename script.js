@@ -1,120 +1,318 @@
-let innerInput = document.getElementById('input');
-let mainButton = document.getElementById('button');
-let checkAllButton = document.getElementById('button-check');
-let uncheckAllButton = document.getElementById('button-uncheck');
-let deleteAllButton = document.getElementById('button-delete');
-// let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
+const todoMainInput = document.getElementById("input");
+const todoAddTaskElement = document.getElementById("add-task");
+const listContainerElement = document.getElementById("todo-list");
+const changeAllStatusesButton = document.getElementById("change-all");
+const filterAllButton = document.getElementById("filter-all");
+const filterCompletedButton = document.getElementById("filter-complete");
+const filterActiveButton = document.getElementById("filter-active");
+const clearCompletedButton = document.getElementById("clear-completed");
+const textareaSelector = document.getElementsByTagName("textarea");
+const pageButtons = document.getElementById("page-buttons");
+const countTasksContainer = document.getElementById("count-tasks");
+
 let toDoArray = [];
-let id = 0;
+let setFilter = "All";
+let currentPage = 1;
+const tasksPerPage = 5;
 
-const addNewTask = function () {
+let allTasksCounter,
+  activeTasksCounter,
+  completedTasksCounter,
+  clearAllCompletedCounter;
 
-    if (innerInput.value !== null && innerInput.value !== '') { // interesting: почему если вместо innerInput.value я пишу inputText то нихера не работает?
-
-        let newTask = document.createElement('div');
-        let checkbox = document.createElement('input');
-        let deleteButton = document.createElement('button');
-
-        checkbox.type = 'checkbox';
-        checkbox.id = id;
-        deleteButton.id = id;
-
-        newTask.innerHTML = innerInput.value;
-        newTask.setAttribute("id", id)
-        // console.log(id);
-        document.body.append(newTask);
-        newTask.append(checkbox);
-        newTask.append(deleteButton);
-        deleteButton.addEventListener('click', removeTask);
-        checkbox.addEventListener('click', checkboxValue)
-        innerInput.value = '';
-        // toDoArray.push(newTask.id);
-        // console.log(toDoArray);
-
-        let toDoObject = {
-            id: id,
-            checkboxId: id,
-            deleteButtoinId: id,
-            checkboxed: false,
-        }
-
-
-        toDoArray.push(toDoObject);
-        id++;
-
-        document.getElementById("input").focus(); //пиздец кайф
+const renderTodos = () => {
+  todoMainInput.focus();
+  listContainerElement.innerHTML = "";
+  tasksCounter(); //считаем количество тудух и разбрасываем по кнопкам all, completed, active
+  
+  let filteredArray;
+  
+  // Фильтруем в зависимости от выбранного фильтра: All | Completed | Active
+  if (toDoArray.length) {
+    switch (setFilter) {
+      case "All":
+        filteredArray = toDoArray.slice(
+          currentPage * tasksPerPage - tasksPerPage,
+          currentPage * tasksPerPage
+        );
+        break;
+      case "Active":
+        filteredArray = toDoArray.filter((todo) => !todo.isCompleted);
+        filteredArray = filteredArray.slice(
+          currentPage * tasksPerPage - tasksPerPage,
+          currentPage * tasksPerPage
+        );
+        break;
+      case "Completed":
+        filteredArray = toDoArray.filter((todo) => todo.isCompleted);
+        filteredArray = filteredArray.slice(
+          currentPage * tasksPerPage - tasksPerPage,
+          currentPage * tasksPerPage
+        );
+        break;
     }
+  } else { //если массив пустой, то удаляем все кнопки
+    pageButtons.innerHTML = "";
+    listContainerElement.innerHTML = "";
+    return;
+  }
+
+  // Рисуем отфильтрованный массив со всеми плюшками в DOM.
+
+  filteredArray.forEach((todo) => {
+    const newTodoElement = document.createElement("div");
+    newTodoElement.innerHTML = todo.text;
+    newTodoElement.id = todo.id;
+    newTodoElement.classList.add("todo");
+
+    const checkboxElement = document.createElement("input");
+    checkboxElement.type = "checkbox";
+    checkboxElement.classList.add("checkbox-flex");
+
+    const labelElement = document.createElement("label");
+    const spanElement = document.createElement("span");
+
+    checkboxElement.checked = todo.isCompleted;
+
+    if (checkboxElement.checked) {
+      spanElement.innerText = "√";
+      newTodoElement.classList.add('crossed-out')
+    }
+
+    const deleteButtonElement = document.createElement("button");
+    deleteButtonElement.classList.add("delete-button-flex");
+    deleteButtonElement.innerText = 'x';
+
+    checkboxElement.addEventListener("click", () => {
+      changeCheckboxStatus(todo.id, !todo.isCompleted);
+    });
+
+    deleteButtonElement.addEventListener("click", () => {
+      removeTask(todo.id);
+    });
+
+    newTodoElement.addEventListener("dblclick", () => {
+      changeInputText(todo.id);
+    });
+
+    newTodoElement.append(labelElement);
+    labelElement.append(checkboxElement);
+    labelElement.append(spanElement);
+    // newTodoElement.append(checkboxElement);
+    labelElement.append(deleteButtonElement);
+    listContainerElement.append(newTodoElement);
+  });
+ 
+  createPageButtons();
+  // if(toDoArray.length) {
+  // highlightCurrentPage();
+  // }
+  
+  if (!filteredArray.length && currentPage - 1) {
+    currentPage = currentPage - 1;
+    render();
+  }
+  highlightCurrentPage();
+  
+  filteredArray = [];
 };
 
-const removeAllCheckboxedTasks = function () {
+const highlightCurrentPage = () => {
 
-    let filtered = toDoArray.filter(item => item.checkboxed == true)
-
-    for (let ids of filtered) {
-        let neededId = ids.id
-        let element = document.getElementById(neededId)
-        element.parentNode.removeChild(element);
-        toDoArray = toDoArray.filter(del => del.id !== neededId)
-
-    }
+  const getCurrentPageId = document.getElementById(`${(currentPage)}`)
+  if (getCurrentPageId) {
+  getCurrentPageId.classList.add('page-highlight');
+  };
 }
 
+const tasksCounter = () => {
 
-const removeTask = function (e) {
-    let target = e.target.id;
+  allTasksCounter = toDoArray.length;
+  activeTasksCounter = toDoArray.filter(
+    (element) => !element.isCompleted
+  ).length;
+  completedTasksCounter = toDoArray.filter(
+    (element) => element.isCompleted
+  ).length;
 
-    let task = toDoArray.find(item => item.id == target);
-    let element = document.getElementById(task.id);
-    element.parentNode.removeChild(element);
-    toDoArray = toDoArray.filter(del => del.id !== task.id);
+  if (allTasksCounter) {
 
+    filterAllButton.innerHTML = "";
+    filterActiveButton.innerHTML = "";
+    filterCompletedButton.innerHTML = "";
+
+    filterAllButton.innerHTML = 'All <br>todos</br>' + `(${allTasksCounter})`;
+    filterActiveButton.innerHTML = 'Active <br>todos</br>' + `(${activeTasksCounter})`;
+    filterCompletedButton.innerHTML = 'Completed <br>todos</br>' + `(${completedTasksCounter})`;
+    
+  } else {
+    filterAllButton.innerHTML = 'All <br>todos</br>';
+    filterActiveButton.innerHTML = 'Active <br>todos</br>';
+    filterCompletedButton.innerHTML = 'Completed <br>todos</br>';
+  };
+
+}
+
+const createPageButtons = () => {
+  const completedTodoArray = toDoArray.filter((element) => element.isCompleted);
+  const activeTodoArray = toDoArray.filter((element) => !element.isCompleted);
+  const allTodoArray = toDoArray;
+  let currentArray;
+
+  setFilter === "All"
+    ? (currentArray = allTodoArray)
+    : setFilter === "Completed"
+    ? (currentArray = completedTodoArray)
+    : setFilter === "Active"
+    ? (currentArray = activeTodoArray)
+    : currentArray === allTodoArray;
+
+  pageButtons.innerHTML = "";
+
+  pages = Math.ceil(currentArray.length / tasksPerPage);
+
+  for (i = 1; i <= pages; i++) {
+    const newButton = document.createElement("button");
+    newButton.innerHTML = i;
+    newButton.id = i;
+    newButton.addEventListener("click", () => {
+      currentPage = +newButton.innerHTML;
+      render();
+    });
+    pageButtons.append(newButton);
+
+   
+  }
 };
 
-const checkboxValue = function (e) {
-    let target = e.target.id
-    // console.log(target);
+const changeInputText = (id) => {
+  if (textareaSelector.length > 0) {
+    return;
+  } else {
+    const element = document.getElementById(`${id}`);
+    const textarea = document.createElement("textarea");
+    textarea.value = toDoArray[toDoArray.findIndex((el) => el.id === id)].text;
+    element.style.display = "none";
+    textarea.classList.add("textarea");
+    element.after(textarea);
+    textarea.focus();
 
-    toDoObject = toDoArray.findIndex(obj => obj.id == target);
-    if (toDoArray[toDoObject].checkboxed == false) {
-        toDoArray[toDoObject].checkboxed = true
-    } else {
-        toDoArray[toDoObject].checkboxed = false
-    }
-    // console.log(toDoArray);
+    textarea.addEventListener("blur", () => {
+      element.innerText = textarea.value;
+      // textarea.classList.add("edit");
+      if (!textarea.value.trim()) {
+        textarea.remove();
+        element.style.display = "flex";
+        render();
+      } else {
+        toDoArray[toDoArray.findIndex((el) => el.id === id)].text =
+          element.innerText;
+        console.log(element.innerText);
+        textarea.remove();
+        element.style.display = "flex";
+        render();
+      }
+    });
 
+    textarea.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        textarea.blur();
+      }
+    });
+  }
 };
 
-const allCheckboxesChecked = function () {
+const createNewTodo = () => {
+  const text = todoMainInput.value.trim();
+  todoMainInput.value = "";
 
-    let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
-    toDoArray.map(a => a.checkboxed = true);
+  if (!text) {
+    alert("You can't create empty task");
+    return;
+  }
 
-    checkboxes.forEach((element) => {
-        if (element.checked === false) {
-            element.checked = true
-        }
-    })
-    // console.log(toDoArray);
+  const newTodo = {
+    id: Date.now(),
+    text,
+    isCompleted: false,
+  };
+
+  toDoArray.push(newTodo);
+
+  render();
+  todoMainInput.focus();
 };
 
-const allCheckboxesUnchecked = function () {
-    let checkboxes = Array.from(document.body.querySelectorAll('div > input'))
-    toDoArray.map(a => a.checkboxed = false);
-    checkboxes.forEach((element) => {
-        if (element.checked === true) {
-            element.checked = false
-        }
-    })
-    // console.log(toDoArray);
+const changeAllStatuses = () => {
+  let result;
+  toDoArray.find((todo) =>
+    !todo.isCompleted ? (result = true) : (result = false)
+  );
+
+  if (result === true) {
+    toDoArray.forEach((todo) => {
+      todo.isCompleted = true;
+    });
+  }
+
+  if (result === false) {
+    toDoArray.forEach((todo) => {
+      todo.isCompleted = false;
+    });
+  }
+
+  render();
 };
 
+const changeCheckboxStatus = (id, isCompleted) => {
+  const taskIndex = toDoArray.findIndex((todo) => {
+    return todo.id === id;
+  });
 
-mainButton.addEventListener('click', addNewTask);
-checkAllButton.addEventListener('click', allCheckboxesChecked);
-uncheckAllButton.addEventListener('click', allCheckboxesUnchecked);
-deleteAllButton.addEventListener('click', removeAllCheckboxedTasks);
-innerInput.addEventListener('keypress', function (event) {
-    if (event.key === 'Enter') {
-        document.getElementById("button").click();
-    }
+  toDoArray[taskIndex].isCompleted = isCompleted;
+
+  render();
+};
+
+const removeTask = (id) => {
+  const taskIndex = toDoArray.findIndex((todo) => {
+    return todo.id === id;
+  });
+
+  toDoArray.splice(taskIndex, 1);
+
+  render();
+};
+
+const removeAllCompleted = () => {
+  toDoArray = toDoArray.filter((todo) => !todo.isCompleted);
+  setFilter = "All";
+
+  render();
+};
+
+const render = () => {
+  renderTodos();
+};
+
+filterAllButton.addEventListener("click", () => {
+  setFilter = "All";
+  render();
+});
+filterActiveButton.addEventListener("click", () => {
+  setFilter = "Active";
+  render();
+});
+filterCompletedButton.addEventListener("click", () => {
+  setFilter = "Completed";
+  render();
+});
+
+clearCompletedButton.addEventListener("click", removeAllCompleted);
+changeAllStatusesButton.addEventListener("click", changeAllStatuses);
+todoAddTaskElement.addEventListener("click", createNewTodo);
+todoMainInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    createNewTodo();
+  }
 });
